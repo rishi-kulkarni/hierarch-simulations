@@ -51,16 +51,19 @@ def poweranalysis(
         col_names = [f"Level_{idx}" for idx, v in enumerate(container)]
         col_names.append("y")
         df = pd.DataFrame(data=data, columns=col_names)
-        # statsmodels struggles a bit with nested data structures, so we specify
-        # the outermost level in groups and the other in var_component
-        var_component = {"Level_1": "0 + C(Level_1)"}
+
         model = sm.MixedLM.from_formula(
-            "y ~ 1", groups="Level_0", re_formula="1", vc_formula=var_component, data=df
+            # Level_0 is the "treatment"
+            "y ~ Level_0",
+            # see https://www.statsmodels.org/devel/examples/notebooks/generated/variance_components.html
+            # this is more or less equivalent to "y ~ Level_0 + (1 | Level_1)"
+            # in Wilkinson notation
+            groups="Level_1",
+            data=df,
         )
         result = model.fit()
         # by specifying our model like this, y is a function of the intercept, so
         # that's the p-value we care about
-        lmm_pvals.append(result.pvalues.Intercept)
+        lmm_pvals.append(result.pvalues.Level_0)
 
     return perm_test_pvals, lmm_pvals
-
