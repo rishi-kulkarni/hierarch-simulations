@@ -58,6 +58,8 @@ def poweranalysis(
             "y ~ 1", groups="Level_0", re_formula="1", vc_formula=var_component, data=df
         )
         result = model.fit()
+        # by specifying our model like this, y is a function of the intercept, so
+        # that's the p-value we care about
         lmm_pvals.append(result.pvalues.Intercept)
 
     return perm_test_pvals, lmm_pvals
